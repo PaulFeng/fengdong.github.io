@@ -108,23 +108,32 @@
 
 
 
-  <meta name="description" content="Tomorrow is a new day">
-<meta property="og:type" content="website">
-<meta property="og:title" content="fengdong">
-<meta property="og:url" content="https://blog.fengdong.tech/index.html">
+  <meta name="description" content="vue-cli源码分析—— 一步步实现自己的脚手架工具   基于版本2.9.3， vue-cli 3.x更改为与create-react-app类似的集成cli了，所以待有时间再研究  工作流程根据自己的理解绘制流程图： 第三方依赖 download-git-repo从git仓库下载项目模板 commander组织和处理命令行工具，简化命令流程 metalsmith静态站点生成工具，插件化文件处理">
+<meta name="keywords" content="vue-cli,javascript,源码分析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="vue-cli源码分析">
+<meta property="og:url" content="https://blog.fengdong.tech/2018/04/07/Vue-cli-source-code-analysis/index.html">
 <meta property="og:site_name" content="fengdong">
-<meta property="og:description" content="Tomorrow is a new day">
+<meta property="og:description" content="vue-cli源码分析—— 一步步实现自己的脚手架工具   基于版本2.9.3， vue-cli 3.x更改为与create-react-app类似的集成cli了，所以待有时间再研究  工作流程根据自己的理解绘制流程图： 第三方依赖 download-git-repo从git仓库下载项目模板 commander组织和处理命令行工具，简化命令流程 metalsmith静态站点生成工具，插件化文件处理">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://p6eo0caza.bkt.clouddn.com/images/vue-cli/vue-cli-flowchart.jpg">
+<meta property="og:image" content="http://p6eo0caza.bkt.clouddn.com/images/vue-cli/npm-bin.png">
+<meta property="og:image" content="http://p6eo0caza.bkt.clouddn.com/images/vue-cli/pm2.png">
+<meta property="og:image" content="http://p6eo0caza.bkt.clouddn.com/images/vue-cli/test-init.png">
+<meta property="og:image" content="http://p6eo0caza.bkt.clouddn.com/images/vue-cli/test.png">
+<meta property="og:image" content="http://p6eo0caza.bkt.clouddn.com/images/vue-cli/failed.png">
+<meta property="og:updated_time" content="2018-07-08T13:04:39.477Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="fengdong">
-<meta name="twitter:description" content="Tomorrow is a new day">
+<meta name="twitter:title" content="vue-cli源码分析">
+<meta name="twitter:description" content="vue-cli源码分析—— 一步步实现自己的脚手架工具   基于版本2.9.3， vue-cli 3.x更改为与create-react-app类似的集成cli了，所以待有时间再研究  工作流程根据自己的理解绘制流程图： 第三方依赖 download-git-repo从git仓库下载项目模板 commander组织和处理命令行工具，简化命令流程 metalsmith静态站点生成工具，插件化文件处理">
+<meta name="twitter:image" content="http://p6eo0caza.bkt.clouddn.com/images/vue-cli/vue-cli-flowchart.jpg">
 
 
 
 
 
 
-  <link rel="canonical" href="https://blog.fengdong.tech/"/>
+  <link rel="canonical" href="https://blog.fengdong.tech/2018/04/07/Vue-cli-source-code-analysis/"/>
 
 
 
@@ -134,7 +143,7 @@
   };
 </script>
 
-  <title>fengdong</title>
+  <title>vue-cli源码分析 | fengdong</title>
   
 
 
@@ -181,8 +190,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -219,7 +227,7 @@
         
         
           
-          <li class="menu-item menu-item-home menu-item-active">
+          <li class="menu-item menu-item-home">
     <a href="/" rel="section">
       <i class="menu-item-icon fa fa-fw fa-home"></i> <br />首页</a>
   </li>
@@ -310,9 +318,9 @@
           
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -344,11 +352,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/04/07/Vue-cli-source-code-analysis/" itemprop="url">
-                  vue-cli源码分析
-                </a>
+          <h1 class="post-title" itemprop="name headline">vue-cli源码分析
               
             
           </h1>
@@ -441,9 +445,7 @@
       
 
       
-        
-          
-            <h2 style="text-align:center;">vue-cli源码分析<br><span style="font-size:16px;">—— 一步步实现自己的脚手架工具</span></h2>
+        <h2 style="text-align:center;">vue-cli源码分析<br><span style="font-size:16px;">—— 一步步实现自己的脚手架工具</span></h2>
 
 <blockquote>
 <p>基于版本2.9.3， vue-cli 3.x更改为与create-react-app类似的集成cli了，所以待有时间再研究</p>
@@ -524,8 +526,6 @@
 <p><strong>inquirer</strong><br>具体api请自行查阅官方文档，这里简单应用到我们自建的项目中</p>
 <p><strong>metalsmith</strong></p>
 
-          
-        
       
     </div>
 
@@ -540,509 +540,57 @@
     
 
     
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>fengdong</li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://blog.fengdong.tech/2018/04/07/Vue-cli-source-code-analysis/" title="vue-cli源码分析">https://blog.fengdong.tech/2018/04/07/Vue-cli-source-code-analysis/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明出处！</li>
+</ul>
+
+      </div>
+    
 
     <footer class="post-footer">
       
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://blog.fengdong.tech/2018/04/06/chalk/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="fengdong">
-      <meta itemprop="description" content="Tomorrow is a new day">
-      <meta itemprop="image" content="http://p6eo0caza.bkt.clouddn.com/images/avatar/avatar-lf.jpeg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="fengdong">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/04/06/chalk/" itemprop="url">
-                  chalk.js源码分析
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2018-04-06 21:01:09" itemprop="dateCreated datePublished" datetime="2018-04-06T21:01:09+08:00">2018-04-06</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2018-07-08 21:11:23" itemprop="dateModified" datetime="2018-07-08T21:11:23+08:00">2018-07-08</time>
-              
-            
-          </span>
-
+        <div class="post-tags">
           
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/vue-cli/" itemprop="url" rel="index"><span itemprop="name">vue-cli</span></a></span>
-
-                
-                
-              
-            </span>
+            <a href="/tags/vue-cli/" rel="tag"># vue-cli</a>
           
-
+            <a href="/tags/javascript/" rel="tag"># javascript</a>
           
-            
+            <a href="/tags/源码分析/" rel="tag"># 源码分析</a>
           
-
-          
-          
-
-          
-
-          
-
-          
-
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="nodejs如何在终端输出带颜色的命令行"><a href="#nodejs如何在终端输出带颜色的命令行" class="headerlink" title="nodejs如何在终端输出带颜色的命令行"></a>nodejs如何在终端输出带颜色的命令行</h4><blockquote>
-<p>参考：<br><a href="https://github.com/Marak/colors.js/blob/master/lib/colors.js" target="_blank" rel="noopener">colors源码</a><br><a href="https://github.com/chalk/ansi-styles/blob/master/index.js" target="_blank" rel="noopener">ansi-styles源码</a><br><a href="https://github.com/chalk/chalk/blob/master/index.js" target="_blank" rel="noopener">chalk源码</a><br><a href="https://www.jianshu.com/p/248a276e1a18" target="_blank" rel="noopener">ANSI转义字符</a><br><a href="https://blog.csdn.net/ShewMi/article/details/78992458" target="_blank" rel="noopener">通过控制台输出各种颜色的字符——ANSIConsole、JANSI</a><br><a href="https://zhuanlan.zhihu.com/p/27308276" target="_blank" rel="noopener">知乎 ~ Node.js Color 模块实现入门浅析</a></p>
-</blockquote>
-<h4 id="已有实现方案"><a href="#已有实现方案" class="headerlink" title="已有实现方案"></a>已有实现方案</h4><p><code>colors</code>、<code>chalk</code>、<code>cli-color</code>等</p>
-<h4 id="ANSI控制码（ANSI-escape-code）"><a href="#ANSI控制码（ANSI-escape-code）" class="headerlink" title="ANSI控制码（ANSI escape code）"></a>ANSI控制码（<a href="https://en.wikipedia.org/wiki/ANSI_escape_code#Colors_and_Styles" target="_blank" rel="noopener">ANSI escape code</a>）</h4><p>ANSI 具体介绍可查看<a href="https://en.wikipedia.org/wiki/ANSI_(disambiguation" target="_blank" rel="noopener">维基百科</a>)的解释。</p>
-<p>如果要实现控制终端输出文字颜色或者背景色等，首先需要了解ANSI控制码。</p>
-<p>ANSI控制码用于在字符显示系统中控制光标移动和字符色彩等，常用于BBS系统中。</p>
-<p>ANSI ESCAPE SEQUENCES又称为VT100系列控制码，国内译为ANSI控制码。顾名思义，需要VT100系列终端的支持，当然现在已经不在局限于VT100了，包括xterm,linux都能很好完成。</p>
-<p>ANSI控制码开始的标志都为ESC[，ESC对应ASCII码表的033(八进制)，linux命令echo用-e启用转义，\033来输入ESC，\033[31m即为ESC[31m。</p>
-<p>但是，通常在使用时通常用十六进制来表示ESC，即\u001b。</p>
-<p>注意：不同的终端对ANSI控制码的支持度不一样，所以不能保证所有系统上都可以实现效果。</p>
-<h5 id="ASCII控制字符"><a href="#ASCII控制字符" class="headerlink" title="ASCII控制字符"></a>ASCII控制字符</h5><table>
-<thead>
-<tr>
-<th>二进制</th>
-<th>十进制</th>
-<th>十六进制</th>
-<th>缩写</th>
-<th>可以显示的表示法</th>
-<th>名称/意义</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>0000 0000</td>
-<td>0</td>
-<td>00</td>
-<td>NUL</td>
-<td>␀</td>
-<td>空字符（Null）</td>
-</tr>
-<tr>
-<td>0000 0001</td>
-<td>1</td>
-<td>01</td>
-<td>SOH</td>
-<td>␁</td>
-<td>标题开始</td>
-</tr>
-<tr>
-<td>0000 0010</td>
-<td>2</td>
-<td>02</td>
-<td>STX</td>
-<td>␂</td>
-<td>本文开始</td>
-</tr>
-<tr>
-<td>0000 0011</td>
-<td>3</td>
-<td>03</td>
-<td>ETX</td>
-<td>␃</td>
-<td>本文结束</td>
-</tr>
-<tr>
-<td>0000 0100</td>
-<td>4</td>
-<td>04</td>
-<td>EOT</td>
-<td>␄</td>
-<td>传输结束</td>
-</tr>
-<tr>
-<td>0000 0101</td>
-<td>5</td>
-<td>05</td>
-<td>ENQ</td>
-<td>␅</td>
-<td>请求</td>
-</tr>
-<tr>
-<td>0000 0110</td>
-<td>6</td>
-<td>06</td>
-<td>ACK</td>
-<td>␆</td>
-<td>确认回应</td>
-</tr>
-<tr>
-<td>0000 0111</td>
-<td>7</td>
-<td>07</td>
-<td>BEL</td>
-<td>␇</td>
-<td>响铃</td>
-</tr>
-<tr>
-<td>0000 1000</td>
-<td>8</td>
-<td>08</td>
-<td>BS</td>
-<td>␈</td>
-<td>退格</td>
-</tr>
-<tr>
-<td>0000 1001</td>
-<td>9</td>
-<td>09</td>
-<td>HT</td>
-<td>␉</td>
-<td>水平定位符号</td>
-</tr>
-<tr>
-<td>0000 1010</td>
-<td>10</td>
-<td>0A</td>
-<td>LF</td>
-<td>␊</td>
-<td>换行键</td>
-</tr>
-<tr>
-<td>0000 1011</td>
-<td>11</td>
-<td>0B</td>
-<td>VT</td>
-<td>␋</td>
-<td>垂直定位符号</td>
-</tr>
-<tr>
-<td>0000 1100</td>
-<td>12</td>
-<td>0C</td>
-<td>FF</td>
-<td>␌</td>
-<td>换页键</td>
-</tr>
-<tr>
-<td>0000 1101</td>
-<td>13</td>
-<td>0D</td>
-<td>CR</td>
-<td>␍</td>
-<td>归位键</td>
-</tr>
-<tr>
-<td>0000 1110</td>
-<td>14</td>
-<td>0E</td>
-<td>SO</td>
-<td>␎</td>
-<td>取消变换（Shift out）</td>
-</tr>
-<tr>
-<td>0000 1111</td>
-<td>15</td>
-<td>0F</td>
-<td>SI</td>
-<td>␏</td>
-<td>启用变换（Shift in）</td>
-</tr>
-<tr>
-<td>0001 0000</td>
-<td>16</td>
-<td>10</td>
-<td>DLE</td>
-<td>␐</td>
-<td>跳出数据通讯</td>
-</tr>
-<tr>
-<td>0001 0001</td>
-<td>17</td>
-<td>11</td>
-<td>DC1</td>
-<td>␑</td>
-<td>设备控制一（XON 启用软件速度控制）</td>
-</tr>
-<tr>
-<td>0001 0010</td>
-<td>18</td>
-<td>12</td>
-<td>DC2</td>
-<td>␒</td>
-<td>设备控制二</td>
-</tr>
-<tr>
-<td>0001 0011</td>
-<td>19</td>
-<td>13</td>
-<td>DC3</td>
-<td>␓</td>
-<td>设备控制三（XOFF 停用软件速度控制）</td>
-</tr>
-<tr>
-<td>0001 0100</td>
-<td>20</td>
-<td>14</td>
-<td>DC4</td>
-<td>␔</td>
-<td>设备控制四</td>
-</tr>
-<tr>
-<td>0001 0101</td>
-<td>21</td>
-<td>15</td>
-<td>NAK</td>
-<td>␕</td>
-<td>确认失败回应</td>
-</tr>
-<tr>
-<td>0001 0110</td>
-<td>22</td>
-<td>16</td>
-<td>SYN</td>
-<td>␖</td>
-<td>同步用暂停</td>
-</tr>
-<tr>
-<td>0001 0111</td>
-<td>23</td>
-<td>17</td>
-<td>ETB</td>
-<td>␗</td>
-<td>区块传输结束</td>
-</tr>
-<tr>
-<td>0001 1000</td>
-<td>24</td>
-<td>18</td>
-<td>CAN</td>
-<td>␘</td>
-<td>取消</td>
-</tr>
-<tr>
-<td>0001 1001</td>
-<td>25</td>
-<td>19</td>
-<td>EM</td>
-<td>␙</td>
-<td>连接介质中断</td>
-</tr>
-<tr>
-<td>0001 1010</td>
-<td>26</td>
-<td>1A</td>
-<td>SUB</td>
-<td>␚</td>
-<td>替换</td>
-</tr>
-<tr>
-<td>0001 1011</td>
-<td>27</td>
-<td>1B</td>
-<td>ESC</td>
-<td>␛</td>
-<td>跳出</td>
-</tr>
-<tr>
-<td>0001 1100</td>
-<td>28</td>
-<td>1C</td>
-<td>FS</td>
-<td>␜</td>
-<td>文件分割符</td>
-</tr>
-<tr>
-<td>0001 1101</td>
-<td>29</td>
-<td>1D</td>
-<td>GS</td>
-<td>␝</td>
-<td>组群分隔符</td>
-</tr>
-<tr>
-<td>0001 1110</td>
-<td>30</td>
-<td>1E</td>
-<td>RS</td>
-<td>␞</td>
-<td>记录分隔符</td>
-</tr>
-<tr>
-<td>0001 1111</td>
-<td>31</td>
-<td>1F</td>
-<td>US</td>
-<td>␟</td>
-<td>单元分隔符</td>
-</tr>
-<tr>
-<td>0111 1111</td>
-<td>127</td>
-<td>7F</td>
-<td>DEL</td>
-<td>␡</td>
-<td>删除</td>
-</tr>
-</tbody>
-</table>
-<p>通过阅读下面的文章可以知道，其实就是通过控制码进行样式渲染。</p>
-<blockquote>
-<p>可参阅: <a href="https://juejin.im/post/5a18de6a5188254a701ebec3" target="_blank" rel="noopener">通过Ansi Escape Codes酷炫玩转命令行！</a><br>原文地址：<a href="http://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html" target="_blank" rel="noopener">http://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html</a></p>
-</blockquote>
-<h4 id="编码延伸阅读"><a href="#编码延伸阅读" class="headerlink" title="编码延伸阅读"></a>编码延伸阅读</h4><ul>
-<li><a href="http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html" target="_blank" rel="noopener">阮一峰 ~ 字符编码笔记：ASCII，Unicode 和 UTF-8</a></li>
-<li><a href="https://blog.csdn.net/u014344668/article/details/46596311" target="_blank" rel="noopener">各种编码UNICODE、UTF-8、ANSI、ASCII、GB2312、GBK详解</a></li>
-<li><a href="https://blog.csdn.net/u012971918/article/details/16983469" target="_blank" rel="noopener">字符编码的那些事</a></li>
-<li><a href="https://www.zhihu.com/question/23374078" target="_blank" rel="noopener">知乎 ~ Unicode 和 UTF-8 有何区别？</a></li>
-</ul>
-<h4 id="chalk源码分析"><a href="#chalk源码分析" class="headerlink" title="chalk源码分析"></a>chalk源码分析</h4><blockquote>
-<p>版本：2.4.1</p>
-</blockquote>
-<p>为什么要解读chalk，通过查看上面介绍的几个实现方案，chalk是有对ansi颜色输出支持的判断，所以兼容性处理更好。</p>
-<p>chalk包含了几个重要依赖：</p>
-<ul>
-<li><a href="https://github.com/sindresorhus/escape-string-regexp/blob/master/index.js" target="_blank" rel="noopener">escape-string-regexp</a> — 字符串转义功能<br>对特殊字符进行转义，e.g. ‘$’ =&gt; ‘\$’</li>
-<li><a href="https://github.com/chalk/supports-color/blob/master/index.js" target="_blank" rel="noopener">supports-color</a> — 判断当前系统终端支持的颜色（8色、16色、256色）</li>
-<li><a href="https://github.com/chalk/ansi-styles/blob/master/index.js" target="_blank" rel="noopener">ansi-styles</a> — ANSI控制码对应的颜色值</li>
-</ul>
-<p>先对chalk的整体架构进行了整理，源码很少，但是涉及到原型的东西蛮多的，容易弄混，所以整理成图：<br><img src="http://p6eo0caza.bkt.clouddn.com/images/chalk/chalk-prototype.png" alt="chalk原型架构" title="chalk原型架构"></p>
-<p>现在分析下源码：</p>
-<h6 id="1-module-exports"><a href="#1-module-exports" class="headerlink" title="1. module.exports"></a>1. module.exports</h6><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 实际输出的是chalk.template,看第2点</span></span><br><span class="line"><span class="built_in">module</span>.exports = Chalk(); <span class="comment">// eslint-disable-line new-cap</span></span><br><span class="line"><span class="built_in">module</span>.exports.supportsColor = stdoutColor;</span><br><span class="line"><span class="built_in">module</span>.exports.default = <span class="built_in">module</span>.exports; <span class="comment">// For TypeScript</span></span><br></pre></td></tr></table></figure>
-<h6 id="2-Chalk定义"><a href="#2-Chalk定义" class="headerlink" title="2. Chalk定义"></a>2. Chalk定义</h6><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义Chalk, 生成chalk与chalk.template</span></span><br><span class="line"><span class="comment">// 定义原型指向，如上图左侧部分</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Chalk</span>(<span class="params">options</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// We check for this.template here since calling `chalk.constructor()`</span></span><br><span class="line">    <span class="comment">// by itself will have a `this` of a previously constructed chalk object</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">this</span> || !(<span class="keyword">this</span> <span class="keyword">instanceof</span> Chalk) || <span class="keyword">this</span>.template) &#123;</span><br><span class="line">        <span class="keyword">const</span> chalk = &#123;&#125;;</span><br><span class="line">        applyOptions(chalk, options);</span><br><span class="line"></span><br><span class="line">        chalk.template = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">            <span class="keyword">const</span> args = [].slice.call(<span class="built_in">arguments</span>);</span><br><span class="line">            <span class="keyword">return</span> chalkTag.apply(<span class="literal">null</span>, [chalk.template].concat(args));</span><br><span class="line">        &#125;;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 修改原型指向</span></span><br><span class="line">        <span class="built_in">Object</span>.setPrototypeOf(chalk, Chalk.prototype);</span><br><span class="line">        <span class="built_in">Object</span>.setPrototypeOf(chalk.template, chalk);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 定义constructor，用于生成新的Chalk实例</span></span><br><span class="line">        <span class="comment">// e.g. const ctx = new chalk.constructor(&#123;enabled: false&#125;);</span></span><br><span class="line">        chalk.template.constructor = Chalk;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> chalk.template;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    applyOptions(<span class="keyword">this</span>, options);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h6 id="3-styles"><a href="#3-styles" class="headerlink" title="3. styles"></a>3. styles</h6><p><code>styles</code>可以说是所有使用方法的集合，因为所有的使用方法都是通过<code>Object.defineProperties(xxx, styles)</code>生成的。</p>
-<p>styles到底长什么样呢？<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// styles结构示例</span></span><br><span class="line">&#123;</span><br><span class="line">    red: &#123;</span><br><span class="line">        get() &#123;</span><br><span class="line">            <span class="keyword">return</span> build.call(...);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    black: &#123;</span><br><span class="line">        get() &#123;</span><br><span class="line">            <span class="keyword">return</span> build.call(...);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// 颜色转换方法与直接取颜色值使用方法不同，结构也有所差异</span></span><br><span class="line">    ansi: &#123;</span><br><span class="line">        get() &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> build.call(...);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>下图是在vsCode中断点截取的styles的构造<br><img src="http://p6eo0caza.bkt.clouddn.com/images/chalk/chalk-styles.jpg" alt="styles" title="styles"></p>
-<p>我们在使用chalk时的一个例子就是<code>console.log(clalk.red(&#39;Hello&#39;))</code>,通过上面的原型结构我们知道<code>chalk.red</code>其实就是调用了<code>Chalk.prototype.red</code>,那具体做了什么呢，接着看源码第224行：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Object</span>.defineProperties(Chalk.prototype, styles);</span><br></pre></td></tr></table></figure></p>
-<p>其实为了将styles的所有方法实现在原型上，所以作者才用get(){}属性的，如果不懂的话去查defineProperties方法。</p>
-<h6 id="4-styles由来"><a href="#4-styles由来" class="headerlink" title="4.styles由来"></a>4.styles由来</h6><p>从源码55 ~ 115行，可以看出，<code>ansi-styles</code>模块就是其由来（也就是源码开头定义的ansiStyles）。<br>这个模块定义了每个颜色对应的<code>ANSI控制码</code>,并从<code>color-convert</code>模块生成了一系列颜色转换工具函数，也就是chalk中的hex()、rbg()等方法的由来；</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ansiStyles结构</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 颜色</span></span><br><span class="line">    bgBlack: &#123;</span><br><span class="line">        open: <span class="string">'\u001b[40m'</span>,</span><br><span class="line">        close: <span class="string">'\u001b[49m'</span>,</span><br><span class="line">        closeRe: <span class="regexp">/\\u001b\[49m/g</span>  <span class="comment">// 这个是chalk源码94行添加的，不属于ansi-styles模块自有</span></span><br><span class="line">    &#125;,</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// color模块 指ANSI控制码 31-37</span></span><br><span class="line">    color: &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// bgColor模块 指ANSI控制码 40-47</span></span><br><span class="line">    bgColor: &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// modifier模块 指ANSI控制码 0-8</span></span><br><span class="line">    modifier: &#123;</span><br><span class="line">        bold: &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;,</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h6 id="6-链式操作的实现"><a href="#6-链式操作的实现" class="headerlink" title="6. 链式操作的实现"></a>6. 链式操作的实现</h6><p><code>console.log(chalk.red.underline(&#39;Hello&#39;))</code><br>这种操作是如何实现的呢<br>可以看下最初的图，其实里面已经描述的很清楚了，下面从源码讲解下：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. styles每个方法的定义</span></span><br><span class="line">styles[key] = &#123;</span><br><span class="line">    get() &#123;</span><br><span class="line">        <span class="keyword">const</span> codes = ansiStyles[key];</span><br><span class="line">        <span class="comment">// 每个方法其实都返回了build函数的执行结果，即builder</span></span><br><span class="line">        <span class="keyword">return</span> build.call(<span class="keyword">this</span>, <span class="keyword">this</span>._styles ? <span class="keyword">this</span>._styles.concat(codes) : [codes], <span class="keyword">this</span>._empty, key);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. 定义builder的原型</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> proto = <span class="built_in">Object</span>.defineProperties(<span class="function"><span class="params">()</span> =&gt;</span> &#123;&#125;, styles);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">build</span>(<span class="params">_styles, _empty, key</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> builder = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> applyStyle.apply(builder, <span class="built_in">arguments</span>);</span><br><span class="line">    &#125;;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// `__proto__` is used because we must return a function, but there is</span></span><br><span class="line">    <span class="comment">// no way to create a function with a different prototype</span></span><br><span class="line">    <span class="comment">// builder的原型指向为proto</span></span><br><span class="line">    builder.__proto__ = proto; <span class="comment">// eslint-disable-line no-proto</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> builder;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. 生成Chalk原型</span></span><br><span class="line"><span class="comment">// 可以看出proto和Chalk其实一模一样</span></span><br><span class="line"><span class="built_in">Object</span>.defineProperties(Chalk.prototype, styles);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 总结</span></span><br><span class="line"><span class="comment">// 因为每个builder方法原型都指向了proto，proto中的方法又都是builder函数，即原型又指向proto,构成无限循环,所以可以无限链式调用</span></span><br><span class="line">chalk.red.underline -&gt; Chalk.prototype.red -&gt; builder方法(即red方法) -&gt;  builder原型指向proto -&gt; builder.__proto__.underline</span><br></pre></td></tr></table></figure></p>
-<h6 id="7-返回"><a href="#7-返回" class="headerlink" title="7. 返回"></a>7. 返回</h6><p>最终调用返回结果就是返回了一个包含ANSI控制码的字符串<br>e.g. <code>&quot;\u001b[31m\u001b[4m Hello \u001b[24m\u001b[39m&quot;</code>(红色带下划线)</p>
-<p>其实就是在每次调用后再this._styles结构中增加了每种修饰的open与close</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
       
 
       
       
-        <div class="post-eof"></div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/06/chalk/" rel="next" title="chalk.js源码分析">
+                <i class="fa fa-chevron-left"></i> chalk.js源码分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
       
     </footer>
   </div>
@@ -1052,14 +600,19 @@
   </article>
 
 
-    
-  </section>
 
-  
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
           
+
+  
+
+
 
         </div>
         
@@ -1080,8 +633,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -1171,6 +733,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">1.</span> <span class="nav-text">vue-cli源码分析—— 一步步实现自己的脚手架工具</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#工作流程"><span class="nav-number">1.1.</span> <span class="nav-text">工作流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第三方依赖"><span class="nav-number">1.2.</span> <span class="nav-text">第三方依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何让发布的npm包全局可执行"><span class="nav-number">1.3.</span> <span class="nav-text">如何让发布的npm包全局可执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#介绍几个重要的第三方依赖库"><span class="nav-number">1.4.</span> <span class="nav-text">介绍几个重要的第三方依赖库</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-commander"><span class="nav-number">1.4.1.</span> <span class="nav-text">1. commander</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-download-git-repo"><span class="nav-number">1.4.2.</span> <span class="nav-text">2. download-git-repo</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -1305,6 +883,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
 
   
 
