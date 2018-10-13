@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+<meta name="baidu-site-verification" content="udAcZMfWMH" />
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="初衷为了了解Promise实现原理，查看了很多博客，并且翻阅了Promise/A+规范；由于很多实现都比较基础，并未详细介绍并处理很多细节，所以整理后，将自己的实现思路以及处理细节记录下来。 Promise简介Javascript作为单线程机制，无法同时执行多个任务（当然，H5新增Web Worker可以在js线程外执行任务），所以异步编程的方式都是通过回调或者事件监听方式解决(具体可参考：阮一峰">
+<meta name="keywords" content="javascript,promise">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实现Promise&#x2F;A+规范">
+<meta property="og:url" content="https://blog.fengdong.tech/2018/07/28/implementation-of-promise/index.html">
+<meta property="og:site_name" content="fengdong">
+<meta property="og:description" content="初衷为了了解Promise实现原理，查看了很多博客，并且翻阅了Promise/A+规范；由于很多实现都比较基础，并未详细介绍并处理很多细节，所以整理后，将自己的实现思路以及处理细节记录下来。 Promise简介Javascript作为单线程机制，无法同时执行多个任务（当然，H5新增Web Worker可以在js线程外执行任务），所以异步编程的方式都是通过回调或者事件监听方式解决(具体可参考：阮一峰">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-08-14T15:10:56.849Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="实现Promise&#x2F;A+规范">
+<meta name="twitter:description" content="初衷为了了解Promise实现原理，查看了很多博客，并且翻阅了Promise/A+规范；由于很多实现都比较基础，并未详细介绍并处理很多细节，所以整理后，将自己的实现思路以及处理细节记录下来。 Promise简介Javascript作为单线程机制，无法同时执行多个任务（当然，H5新增Web Worker可以在js线程外执行任务），所以异步编程的方式都是通过回调或者事件监听方式解决(具体可参考：阮一峰">
+
+
+
+
+
+
+  <link rel="canonical" href="https://blog.fengdong.tech/2018/07/28/implementation-of-promise/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>实现Promise/A+规范 | fengdong</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">fengdong</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />标签</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />分类</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />归档</a>
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://blog.fengdong.tech/2018/07/28/implementation-of-promise/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="fengdong">
+      <meta itemprop="description" content="Tomorrow is a new day">
+      <meta itemprop="image" content="http://p6eo0caza.bkt.clouddn.com/images/avatar/avatar-lf.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="fengdong">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">实现Promise/A+规范
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-07-28 18:06:03" itemprop="dateCreated datePublished" datetime="2018-07-28T18:06:03+08:00">2018-07-28</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2018-08-14 23:10:56" itemprop="dateModified" datetime="2018-08-14T23:10:56+08:00">2018-08-14</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/javascript/" itemprop="url" rel="index"><span itemprop="name">javascript</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/07/28/implementation-of-promise/" class="leancloud_visitors" data-flag-title="实现Promise/A+规范">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数：</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="初衷"><a href="#初衷" class="headerlink" title="初衷"></a>初衷</h2><p>为了了解Promise实现原理，查看了很多博客，并且翻阅了Promise/A+规范；由于很多实现都比较基础，并未详细介绍并处理很多细节，所以整理后，将自己的实现思路以及处理细节记录下来。</p>
+<h2 id="Promise简介"><a href="#Promise简介" class="headerlink" title="Promise简介"></a>Promise简介</h2><p>Javascript作为单线程机制，无法同时执行多个任务（当然，H5新增Web Worker可以在js线程外执行任务），所以异步编程的方式都是通过回调或者事件监听方式解决(具体可参考：<a href="http://www.ruanyifeng.com/blog/2012/12/asynchronous%EF%BC%BFjavascript.html" target="_blank" rel="noopener">阮一峰博客：Javascript异步编程的4种方法</a>)；这也造成多个Javascript异步任务的处理会出现“callback hell”(回调地狱)，使得这部分代码难以维护，并且很难读懂。</p>
+<p>所以，Javascript社区的大牛们就提出解决这种回调地狱的模式（Promise），最初的实现方案有jQuery的deferred，<a href="https://github.com/cujojs/when" target="_blank" rel="noopener">when</a>，<a href="https://github.com/kriskowal/q" target="_blank" rel="noopener">q</a>等；现在，最流行的是 Promise/A+ 规范。</p>
+<p>这里不再赘述Promise/A+规范，详细可查看文章底部链接。</p>
+<h2 id="Promise的使用"><a href="#Promise的使用" class="headerlink" title="Promise的使用"></a>Promise的使用</h2><p>详见…</p>
+<h2 id="Promise-简单实现"><a href="#Promise-简单实现" class="headerlink" title="Promise 简单实现"></a>Promise 简单实现</h2><h4 id="构造函数和then"><a href="#构造函数和then" class="headerlink" title="构造函数和then"></a>构造函数和then</h4><p>首先实现一个最简化版的功能，在使用Promise时，会传入我们的异步操作，并且默认有两个参数 resolve 和 reject ；这里我们先实现Promise resolve和then的简单功能：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Promise</span>(<span class="params">resolver</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>.callback = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">resolve</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.callback(value)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  resolver(resolve.bind(<span class="keyword">this</span>))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">Promise</span>.prototype.then = <span class="function"><span class="keyword">function</span> (<span class="params">fn</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>.callback = fn</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面定义的构造函数中，实例化Promise并添加then方法时，会将then方法的参数保存为回调，以保证resolve时执行回调，现在测试一下:<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> promise = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> (<span class="params">resolve</span>) </span>&#123;</span><br><span class="line">  setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    resolve(<span class="string">'resolve'</span>)</span><br><span class="line">  &#125;, <span class="number">100</span>)</span><br><span class="line">&#125;)</span><br><span class="line">promise.then(<span class="function"><span class="keyword">function</span>(<span class="params">res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(res)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// 100ms后打印'resolve'</span></span><br></pre></td></tr></table></figure></p>
+<p>注意：上面的构造函数存在一个问题，使用原生Promise时我们并不总是传递异步函数，也可能是同步的，这个时候我们上面的then方法就会不执行<sup>[1]</sup>，这个后面讨论。</p>
+<h4 id="链式调用"><a href="#链式调用" class="headerlink" title="链式调用"></a>链式调用</h4><p>链式调用的实现就是在then方法中返回this自身就可以了，首先我们需要将回调函数改为数组，用来存储每次执行then时的回调函数：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Promise</span>(<span class="params">resolver</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>._resolveCallbacks = []</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">resolve</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>._resolveCallbacks.forEach(<span class="function"><span class="keyword">function</span>(<span class="params">callback</span>) </span>&#123;</span><br><span class="line">      callback(value)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  resolver(resolve.bind(<span class="keyword">this</span>))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">Promise</span>.prototype.then = <span class="function"><span class="keyword">function</span> (<span class="params">fn</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>._resolveCallbacks.push(fn)</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">this</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>测试：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> promise = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve</span>) </span>&#123;</span><br><span class="line">  setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;resolve(<span class="string">'resolve'</span>)&#125;,<span class="number">0</span>)</span><br><span class="line">&#125;)</span><br><span class="line">  .then(<span class="function"><span class="params">res</span> =&gt;</span> <span class="built_in">console</span>.log(res))</span><br><span class="line">  .then(<span class="function"><span class="params">res</span> =&gt;</span> <span class="built_in">console</span>.log(res))</span><br><span class="line"><span class="comment">// 'resolve'</span></span><br><span class="line"><span class="comment">// 'resolve'</span></span><br></pre></td></tr></table></figure></p>
+<p>这样子就实现了，但是存在问题就是同一个Promise实例的所有then回调执行时的value都是同一个值，链式then回调中返回新值无法在下一个回调中使用<sup>[2]</sup>。<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> promise = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve</span>) </span>&#123;</span><br><span class="line">  setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;resolve(<span class="string">'resolve'</span>)&#125;,<span class="number">0</span>)</span><br><span class="line">&#125;)</span><br><span class="line">  .then(<span class="function"><span class="params">res</span> =&gt;</span> &#123;<span class="built_in">console</span>.log(res); <span class="keyword">return</span> <span class="string">'new resolve'</span>&#125;)</span><br><span class="line">  .then(<span class="function"><span class="params">res</span> =&gt;</span> <span class="built_in">console</span>.log(res))</span><br><span class="line"><span class="comment">// 即最后一个then执行的也是'resolve'，并不符合Promise预期</span></span><br></pre></td></tr></table></figure></p>
+<p>========================== 分界线 ==============================</p>
+<h2 id="Promise具体实现"><a href="#Promise具体实现" class="headerlink" title="Promise具体实现"></a>Promise具体实现</h2><p>下面针对Promise/A+规范对具体细节处理过程进行解剖</p>
+<h4 id="Promise状态"><a href="#Promise状态" class="headerlink" title="Promise状态"></a>Promise状态</h4><p>根据Promise/A+规范，Promise应该有三个状态：</p>
+<ul>
+<li><strong>Pending(等待)</strong></li>
+<li><strong>Fulfilled(满足/执行)</strong> 当满足时，当前Promise必须有一个终值（value）</li>
+<li><strong>Rejected(拒绝)</strong> 当拒绝时，必须有一个拒因（reason）</li>
+</ul>
+<blockquote>
+<p>Pending状态可以转变为Fulfilled或者Rejected;Fulfilled/Rejected不可以再转变为其他任何状态（状态不可逆）;</p>
+</blockquote>
+<p>所以我们定义三个状态：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> PENDING = <span class="number">0</span></span><br><span class="line"><span class="keyword">var</span> FULFILLED = <span class="number">1</span></span><br><span class="line"><span class="keyword">var</span> REJECTED = <span class="number">2</span></span><br></pre></td></tr></table></figure></p>
+<p>接下来，引入状态机制并加入reject状态回调；初始promise的状态为PENDING，当resolve时将状态更改为FULFILLED，reject时更改为REJECTED，构造函数如下：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Promise</span>(<span class="params">resolver</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// resolver必须是一个函数，与es6实现相同</span></span><br><span class="line">  <span class="keyword">if</span> (!isFunction(resolver)) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">TypeError</span>(<span class="string">'TypeError: Promise resolver '</span> + resolver.toString() + <span class="string">' is not a function'</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">this</span>._status = PENDING</span><br><span class="line">  <span class="keyword">this</span>._value = <span class="literal">undefined</span></span><br><span class="line">  <span class="keyword">this</span>._reason = <span class="literal">undefined</span></span><br><span class="line">  <span class="keyword">this</span>._resolveCallbacks = []</span><br><span class="line">  <span class="keyword">this</span>._rejectCallbacks = []</span><br><span class="line"></span><br><span class="line">  <span class="comment">// new Promise((resolve, reject) =&gt; &#123;&#125;)</span></span><br><span class="line">  <span class="comment">// 立即调用实例化时的参数，并传递resolve和reject参数</span></span><br><span class="line">  resolver(</span><br><span class="line">    <span class="comment">// 即传递给构造函数参数的resolve参数</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> (<span class="params">value</span>) </span>&#123;</span><br><span class="line">      <span class="comment">// Promise需要确保then函数的onFulfilled与onRejected函数异步执行</span></span><br><span class="line">      <span class="comment">// 即针对角标[1]的问题，就算promise构造函数参数不是异步执行，</span></span><br><span class="line">      <span class="comment">// 也必须确保在resolve/reject执行时then回调函数已经添加到回调栈中（即_resolveCallbacks/_rejectCallbacks）</span></span><br><span class="line">      setTimeout(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="comment">// 该处理过程后面会讲，这里暂时可以理解为调用resolve方法</span></span><br><span class="line">        solveProcess(promise, value)</span><br><span class="line">      &#125;, <span class="number">0</span>)</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="function"><span class="keyword">function</span> (<span class="params">reason</span>) </span>&#123;</span><br><span class="line">      setTimeout(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        reject(promise, reason)</span><br><span class="line">      &#125;, <span class="number">0</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// resolve方法</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">resolve</span> (<span class="params">promise, value</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 确保resolve只能执行一次</span></span><br><span class="line">  <span class="keyword">if</span> (promise._status) &#123;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  promise._status = FULFILLED</span><br><span class="line">  promise._value = value</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> index = <span class="number">0</span>, len = promise._resolveCallback.length; index &lt; len; index++) &#123;</span><br><span class="line">    promise._resolveCallback[index](value)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// reject方法，改变promise状态，执行回调</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">reject</span> (<span class="params">promise, reason</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (promise._status) &#123;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  promise._status = REJECTED</span><br><span class="line">  promise._reason = reason</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> index = <span class="number">0</span>, len = promise._rejectCallback.length; index &lt; len; index++) &#123;</span><br><span class="line">    promise._rejectCallback[index](reason)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>构造函数定义时有几个重点：</p>
+<ol>
+<li>构造函数参数resolver必须是一个函数，否则抛出错误</li>
+<li>resolve,reject实现中回调函数的调用必须异步执行（我的实现是直接在resolve中异步）</li>
+<li>resolve,reject方法必须确保只执行一次</li>
+</ol>
+<h4 id="Then函数—重中之重"><a href="#Then函数—重中之重" class="headerlink" title="Then函数—重中之重"></a>Then函数—重中之重</h4><p>关于Then方法的几点描述需要注意：</p>
+<ul>
+<li>1.Promise必须包含一个then方法以访问其当前值、终值和据因</li>
+<li>2.then方法接收两个参数：onFulfilled和onRejected</li>
+<li>3.then方法必须返回一个Promise对象（这个是实现Promise链式调用的关键）</li>
+</ul>
+<h5 id="简单实现并修改then方法："><a href="#简单实现并修改then方法：" class="headerlink" title="简单实现并修改then方法："></a>简单实现并修改then方法：</h5><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Promise</span>.prototype.then = <span class="function"><span class="keyword">function</span> (<span class="params">onFulfilled, onRejected</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> promise = <span class="keyword">this</span></span><br><span class="line">  <span class="keyword">var</span> promise2 = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve, reject</span>) </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">handleResolve</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">      <span class="keyword">var</span> _value = <span class="keyword">typeof</span> onFulfilled === <span class="string">'function'</span> </span><br><span class="line">        ? onFulfilled(value) </span><br><span class="line">        : value</span><br><span class="line">      resolve(_value)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">handleReject</span>(<span class="params">reason</span>) </span>&#123;</span><br><span class="line">      <span class="keyword">var</span> _reason = <span class="keyword">typeof</span> onRejected ? onRejected(_reason) : reason</span><br><span class="line">      reject(_reason)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (promise._status === PENDING) &#123;</span><br><span class="line">      promise._resolveCallbacks.push(handleResolve)</span><br><span class="line">      promise._rejectCallbacks.push(handleReject)</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (promise._status === FULFILLED) &#123;</span><br><span class="line">      handleResolve(promise._value)</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (promise._status === REJECTED) &#123;</span><br><span class="line">      handleReject(promise._reason)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="keyword">return</span> promise2</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>处理步骤如下：</p>
+<ol>
+<li>当调用then方法时，首先定义promise变量保存当前Promise实例</li>
+<li>定义一个新的promise2（then方法返回的），实例化时判断promise（以下都指代当前Promise实例）的状态</li>
+<li>如果是PENDING状态，则将onFulfilled、onRejected包装后的回调函数添加到promise的回调栈中</li>
+<li>如果是FULFILLED，则将promise的当前value作为参数执行promise2的resolve（将promise的状态传递到promise2）</li>
+<li>如果是REJECTED，则将promise的当前reason作为参数执行promise2的reject</li>
+</ol>
+<p>根据Promise/A+规范，onFulfilled/onRejected函数的返回值不同，进行的处理过程是不同的，并且思考：</p>
+<ul>
+<li>链式调用过程中如何改变下个promise的状态</li>
+<li>resolver函数的参数resolve如果处理的Promise实例与then方法中返回Promise的区别是什么，会产生怎样的影响</li>
+</ul>
+<p>带着疑问，一起探讨下promise的处理过程</p>
+<h4 id="Promise处理过程"><a href="#Promise处理过程" class="headerlink" title="Promise处理过程"></a>Promise处理过程</h4><p>到目前为止的实现方案存在诸多问题，then函数根据规范需处理：<br><code>promise2 = promise1.then(onFulfilled, onRejected)</code></p>
+<ol>
+<li>onFulfilled/onRejected如果不是函数，需忽略，根据promise1的执行状态及结果执行promise2。(即promise1执行成功，则执行promise2的resolve，参数为promise1的结果值；反之亦然)</li>
+<li><strong>如果onFulfilled/onRejected返回一个值x，则按照规范的解决过程进行处理<code>[[Resolve]](promise2, x)</code>。并且处理结束后promise2成功执行（即promise2的resolve），注意：只有抛出异常时才会执行promise2的reject</strong></li>
+</ol>
+<p>处理过程具体看规范，这里直接上代码：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">solveProcess</span> (<span class="params">promise, x</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 1.判断返回值x是否指向了promise，避免死循环，抛出异常</span></span><br><span class="line">  <span class="keyword">if</span> (x === promise) &#123;</span><br><span class="line">    <span class="comment">// x与初始promise为同一个Promise，会造成死循环</span></span><br><span class="line">    <span class="keyword">var</span> reason = <span class="keyword">new</span> <span class="built_in">TypeError</span>(<span class="string">'TypeError: A promises callback cannot return that same promise.'</span>)</span><br><span class="line">    reject(promise, reason)</span><br><span class="line">  &#125; </span><br><span class="line">  <span class="comment">// 2.x是否为Promise实例，如果是，则根据x的执行结果，promise执行对应的resolve/reject</span></span><br><span class="line">  <span class="keyword">else</span> <span class="keyword">if</span> (x <span class="keyword">instanceof</span> <span class="built_in">Promise</span>) &#123;</span><br><span class="line">    <span class="comment">// 如果x为Promise，则父Promise等待其fulfilled或reject</span></span><br><span class="line">    x.then(</span><br><span class="line">      <span class="function"><span class="keyword">function</span> (<span class="params">value</span>) </span>&#123;</span><br><span class="line">        resolve(promise, value)</span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="function"><span class="keyword">function</span> (<span class="params">error</span>) </span>&#123;</span><br><span class="line">        reject(promise, error)</span><br><span class="line">      &#125;</span><br><span class="line">    )</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 3.如果以上两点都不是则判断x是否为thenable函数或对象</span></span><br><span class="line">    tryThenable(promise, x, action, isCallback)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">tryThenable</span> (<span class="params">promise, x</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 4.x是否对象或函数,如果不是，则以x为值，调用resolve()</span></span><br><span class="line">  <span class="keyword">if</span> (objectOrFunction(x)) &#123;</span><br><span class="line">    <span class="keyword">var</span> then = <span class="literal">null</span></span><br><span class="line">    <span class="comment">// 5.获取x.then，如果取出异常则reject promise</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      then = x.then</span><br><span class="line">    &#125; <span class="keyword">catch</span> (error) &#123;</span><br><span class="line">      reject(promise, error)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 6.x为thenable则执行then方法（相当于处理Promise）</span></span><br><span class="line">    <span class="comment">// 否则以x为值，调用resolve()</span></span><br><span class="line">    <span class="keyword">if</span> (isFunction(then)) &#123;</span><br><span class="line">      <span class="comment">// 7.then方法的resolvePromise和rejectPromise只允许执行一次，sealed做限制</span></span><br><span class="line">      <span class="comment">// 如果rejectPromise执行了，则结束promise，并以r为据因</span></span><br><span class="line">      <span class="comment">// 如果resolvePromise被调用则以参数y继续执行处理过程</span></span><br><span class="line">      <span class="keyword">var</span> sealed = <span class="literal">false</span></span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        then.call(</span><br><span class="line">          x,</span><br><span class="line">          <span class="comment">/* eslint-disable no-undef */</span></span><br><span class="line">          <span class="function"><span class="keyword">function</span> <span class="title">resolvePromise</span> (<span class="params">y</span>) </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (sealed) <span class="keyword">return</span></span><br><span class="line">            sealed = <span class="literal">true</span></span><br><span class="line">            solveProcess(promise, y)</span><br><span class="line">          &#125;,</span><br><span class="line">          <span class="function"><span class="keyword">function</span> <span class="title">rejectPromise</span> (<span class="params">r</span>) </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (sealed) <span class="keyword">return</span></span><br><span class="line">            sealed = <span class="literal">true</span></span><br><span class="line">            reject(promise, r)</span><br><span class="line">          &#125;</span><br><span class="line">        )</span><br><span class="line">      &#125; <span class="keyword">catch</span> (error) &#123;</span><br><span class="line">        reject(promise, error)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      resolve(promise, x)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    resolve(promise, x)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isFunction</span> (<span class="params">fn</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">typeof</span> fn === <span class="string">'function'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>代码中第7点处理步骤与第2点处理步骤有区别，虽然都有then方法，但是第二点中x已经为Promise实例了，所以resolvePromise中直接调用了resolve方法，如果该实例resolve了一个新的Promise，则会等待执行结果后才会继续执行；第7点中x不是Promise实例，所以需要不停的手动调用处理过程，因为他并不会等待内部thenable的执行结果。</p>
+<p>到这里，可以联系构造函数resolve函数，其实处理过程就这个<br>再看上面我提出的问题，resolve如果参数是promise1则当前promise需等待promise1执行完成，promise的状态继承promise1的状态并执行相应回调</p>
+<h4 id="增加onFulfilled-onRejected回调生成函数"><a href="#增加onFulfilled-onRejected回调生成函数" class="headerlink" title="增加onFulfilled/onRejected回调生成函数"></a>增加onFulfilled/onRejected回调生成函数</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 生成promise执行栈函数，说明：</span></span><br><span class="line"><span class="comment"> * e.g. promise2 = promise1.then(onFulfilled, onRejected)</span></span><br><span class="line"><span class="comment"> * 根据Promise/A+规范，onFulfilled/onRejected依赖于上一个promise.then()返回的新的promise2</span></span><br><span class="line"><span class="comment"> * 并且针对执行返回值定义了一系列处理流程，所以对onFulfilled/onRejected进行闭包封装处理函数并保存在上一个promise的执行栈中</span></span><br><span class="line"><span class="comment"> * 即规范中的[[Resolve]](promise2, x)</span></span><br><span class="line"><span class="comment"> * @param &#123;Promise&#125; promise promise</span></span><br><span class="line"><span class="comment"> * @param &#123;Any&#125; callback onFulfilled/onRejected</span></span><br><span class="line"><span class="comment"> * @param &#123;'resolve'|'reject'&#125; action 执行状态</span></span><br><span class="line"><span class="comment"> * @return &#123;Function&#125; resolve/reject回调函数</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeCallback</span> (<span class="params">promise, callback, action</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 以下注释x均表示onFulfilled/onRejected函数返回值</span></span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params">value</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> x = <span class="literal">null</span></span><br><span class="line">    <span class="comment">// onFulfilled 和 onRejected 都是可选参数，如果不是函数会被忽略，不添加到执行栈中。</span></span><br><span class="line">    <span class="comment">// 并且继承上一个promise的执行状态及执行结果</span></span><br><span class="line">    <span class="keyword">if</span> (isFunction(callback)) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        x = callback(value)</span><br><span class="line">      &#125; <span class="keyword">catch</span> (error) &#123;</span><br><span class="line">        reject(promise, error)</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      solveProcess(promise, x, action, <span class="literal">true</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      action === <span class="string">'resolve'</span></span><br><span class="line">        ? resolve(promise, value)</span><br><span class="line">        : reject(promise, value)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="重构then方法"><a href="#重构then方法" class="headerlink" title="重构then方法"></a>重构then方法</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Promise</span>.prototype.then = <span class="function"><span class="keyword">function</span> (<span class="params">onFulfilled, onRejected</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> promise = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;&#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">switch</span> (<span class="keyword">this</span>._status) &#123;</span><br><span class="line">    <span class="keyword">case</span> PENDING:</span><br><span class="line">      <span class="keyword">this</span>._resolveCallback.push(makeCallback(promise, onFulfilled, <span class="string">'resolve'</span>))</span><br><span class="line">      <span class="keyword">this</span>._rejectCallback.push(makeCallback(promise, onRejected, <span class="string">'reject'</span>))</span><br><span class="line">      <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">case</span> FULFILLED:</span><br><span class="line">      makeCallback(promise, onFulfilled, <span class="string">'resolve'</span>)(<span class="keyword">this</span>._value)</span><br><span class="line">      <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">case</span> REJECTED:</span><br><span class="line">      makeCallback(promise, onRejected, <span class="string">'reject'</span>)(<span class="keyword">this</span>._reason)</span><br><span class="line">      <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      <span class="keyword">break</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> promise</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意：_resolveCallback与_rejectCallback的回调函数中的promise实例是当前then返回的promise，这样才能实现链式调用，每次then方法返回一个新的Promise，根据上一个Promise执行状态执行对应的回调。这样也解决了上面角标[2]的问题，每个then函数都依赖于上一个then方法的执行结果。</p>
+<p>同时，上面提出的问题，then函数返回promise实例其实可以改变下一个promise实例的处理状态，而resolve参数为promise则决定了当前promise的状态</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>promise的实现包含了很多细节性问题，需要慢慢推敲实现，并且规范中并未描述具体的api实现细节，所以需要查看ecma规范。</p>
+<p>对于api并未做详细的讲解，其实catch方法就是then(null, onRejected)，Promise.all()等api实现起来也不太复杂。<br>具体api的实现可以查看我的promise实现：<a href="https://github.com/fengdonglp/fd-promise" target="_blank" rel="noopener">https://github.com/fengdonglp/fd-promise</a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://www.ituring.com.cn/article/66566" target="_blank" rel="noopener">Promises/A+规范(中文版)</a></li>
+<li><a href="https://promisesaplus.com/" target="_blank" rel="noopener">Promises/A+规范(英文版)</a></li>
+<li><a href="http://bruce-xu.github.io/blogs/js/promise" target="_blank" rel="noopener">JS Promise的实现原理</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>fengdong</li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://blog.fengdong.tech/2018/07/28/implementation-of-promise/" title="实现Promise/A+规范">https://blog.fengdong.tech/2018/07/28/implementation-of-promise/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明出处！</li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag"># javascript</a>
+          
+            <a href="/tags/promise/" rel="tag"># promise</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/08/react-native-pit/" rel="next" title="react-native开发中遇到的坑">
+                <i class="fa fa-chevron-left"></i> react-native开发中遇到的坑
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/14/use-of-promise/" rel="prev" title="Promise的使用">
+                Promise的使用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="lv-container" data-id="city" data-uid="MTAyMC80MDI4MS8xNjgwOA=="></div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="http://p6eo0caza.bkt.clouddn.com/images/avatar/avatar-lf.jpeg"
+                alt="fengdong" />
+            
+              <p class="site-author-name" itemprop="name">fengdong</p>
+              <p class="site-description motion-element" itemprop="description">Tomorrow is a new day</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/fengdonglp" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#初衷"><span class="nav-text">初衷</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Promise简介"><span class="nav-text">Promise简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Promise的使用"><span class="nav-text">Promise的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Promise-简单实现"><span class="nav-text">Promise 简单实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#构造函数和then"><span class="nav-text">构造函数和then</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#链式调用"><span class="nav-text">链式调用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Promise具体实现"><span class="nav-text">Promise具体实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Promise状态"><span class="nav-text">Promise状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Then函数—重中之重"><span class="nav-text">Then函数—重中之重</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#简单实现并修改then方法："><span class="nav-text">简单实现并修改then方法：</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Promise处理过程"><span class="nav-text">Promise处理过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#增加onFulfilled-onRejected回调生成函数"><span class="nav-text">增加onFulfilled/onRejected回调生成函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#重构then方法"><span class="nav-text">重构then方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 – <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">fengdong</span>
+
+  
+
+  
+</div>
+
+
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动 v3.7.1</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a class="theme-link" target="_blank" href="https://theme-next.org">NexT.Pisces</a> v6.4.1</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+      <div>
+        
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "1",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      },
+      "slide": {
+        "bdImg": "5",
+        "bdPos": "right",
+        "bdTop": "100"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      </div>
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+    <script type="text/javascript">
+      window.livereOptions = {
+        refer: '2018/07/28/implementation-of-promise/'
+      };
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script>
+    
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+
+      Counter('get', '/classes/Counter', { where: JSON.stringify({ url }) })
+        .done(function ({ results }) {
+          if (results.length > 0) {
+            var counter = results[0];
+            
+              var $element = $(document.getElementById(url));
+              $element.find('.leancloud-visitors-count').text(counter.time + 1);
+            
+            Counter('put', `/classes/Counter/${counter.objectId}`, JSON.stringify({ time: { "__op":"Increment", "amount":1 } }))
+            
+            .fail(function ({ responseJSON }) {
+                console.log('Failed to save Visitor num, with error message: ' + responseJSON.error);
+            })
+          } else {
+            
+              var $element = $(document.getElementById(url));
+              $element.find('.leancloud-visitors-count').text('Counter not initialized! See more at console err msg.');
+              console.error('ATTENTION! LeanCloud counter has security bug, see here how to solve it: https://github.com/theme-next/hexo-leancloud-counter-security. \n But you also can use LeanCloud without security, by set \'security\' option to \'false\'.');
+            
+          }
+        })
+      .fail(function ({ responseJSON }) {
+        console.log('LeanCloud Counter Error:' + responseJSON.code + " " + responseJSON.error);
+      });
+    }
+    
+
+    $(function() {
+      $.get('https://app-router.leancloud.cn/2/route?appId=' + "LR6ffsxhUrN8TBS0C8qA6CUH-gzGzoHsz")
+        .done(function ({ api_server }) {
+          var Counter = function (method, url, data) {
+            return $.ajax({
+              method: method,
+              url: `https://${api_server}/1.1${url}`,
+              headers: {
+                'X-LC-Id': "LR6ffsxhUrN8TBS0C8qA6CUH-gzGzoHsz",
+                'X-LC-Key': "9WmXiCXsm6OJL10V2fYCt4Xo",
+                'Content-Type': 'application/json',
+              },
+              data: data,
+            });
+          };
+          
+          addCount(Counter);
+          
+        })
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

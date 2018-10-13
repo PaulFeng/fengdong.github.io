@@ -20,6 +20,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
 <meta name="theme-color" content="#222">
+<meta name="baidu-site-verification" content="udAcZMfWMH" />
 
 
 
@@ -58,19 +59,19 @@
 
 <link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
 
-<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css" />
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
 
 
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
 
 
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=6.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=6.4.1">
 
 
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=6.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=6.4.1">
 
 
-  <link rel="mask-icon" href="/images/logo.svg?v=6.3.0" color="#222">
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
 
 
 
@@ -85,7 +86,7 @@
   var CONFIG = {
     root: '/',
     scheme: 'Pisces',
-    version: '6.3.0',
+    version: '6.4.1',
     sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
     fancybox: false,
     fastclick: false,
@@ -420,6 +421,17 @@
           
 
           
+          
+             <span id="/2018/04/06/chalk/" class="leancloud_visitors" data-flag-title="chalk.js源码分析">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数：</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
           
 
           
@@ -841,15 +853,16 @@
   </article>
 
 
-
-    <div class="post-spread">
-      
-    </div>
   </div>
 
 
           </div>
           
+
+  
+    <div class="comments" id="comments">
+      <div id="lv-container" data-id="city" data-uid="MTAyMC80MDI4MS8xNjgwOA=="></div>
+    </div>
 
   
 
@@ -903,7 +916,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-count">6</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -922,7 +935,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">3</span>
+                      
+                    
+                    <span class="site-state-item-count">4</span>
                     <span class="site-state-item-name">分类</span>
                   </a>
                 </div>
@@ -949,7 +964,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">7</span>
+                      
+                    
+                    <span class="site-state-item-count">8</span>
                     <span class="site-state-item-name">标签</span>
                   </a>
                 </div>
@@ -994,7 +1011,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#nodejs如何在终端输出带颜色的命令行"><span class="nav-number">1.</span> <span class="nav-text">nodejs如何在终端输出带颜色的命令行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#已有实现方案"><span class="nav-number">2.</span> <span class="nav-text">已有实现方案</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ANSI控制码（ANSI-escape-code）"><span class="nav-number">3.</span> <span class="nav-text">ANSI控制码（ANSI escape code）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#ASCII控制字符"><span class="nav-number">3.1.</span> <span class="nav-text">ASCII控制字符</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#编码延伸阅读"><span class="nav-number">4.</span> <span class="nav-text">编码延伸阅读</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#chalk源码分析"><span class="nav-number">5.</span> <span class="nav-text">chalk源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-module-exports"><span class="nav-number">5.0.1.</span> <span class="nav-text">1. module.exports</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-Chalk定义"><span class="nav-number">5.0.2.</span> <span class="nav-text">2. Chalk定义</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-styles"><span class="nav-number">5.0.3.</span> <span class="nav-text">3. styles</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-styles由来"><span class="nav-number">5.0.4.</span> <span class="nav-text">4.styles由来</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#6-链式操作的实现"><span class="nav-number">5.0.5.</span> <span class="nav-text">6. 链式操作的实现</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#7-返回"><span class="nav-number">5.0.6.</span> <span class="nav-text">7. 返回</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#nodejs如何在终端输出带颜色的命令行"><span class="nav-text">nodejs如何在终端输出带颜色的命令行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#已有实现方案"><span class="nav-text">已有实现方案</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ANSI控制码（ANSI-escape-code）"><span class="nav-text">ANSI控制码（ANSI escape code）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#ASCII控制字符"><span class="nav-text">ASCII控制字符</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#编码延伸阅读"><span class="nav-text">编码延伸阅读</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#chalk源码分析"><span class="nav-text">chalk源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-module-exports"><span class="nav-text">1. module.exports</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-Chalk定义"><span class="nav-text">2. Chalk定义</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-styles"><span class="nav-text">3. styles</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-styles由来"><span class="nav-text">4.styles由来</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#6-链式操作的实现"><span class="nav-text">6. 链式操作的实现</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#7-返回"><span class="nav-text">7. 返回</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
@@ -1014,7 +1031,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+        <div class="copyright">&copy; 2016 – <span itemprop="copyrightYear">2018</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
@@ -1036,7 +1053,7 @@
 
 
 
-  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://theme-next.org">NexT.Pisces</a> v6.3.0</div>
+  <div class="theme-info">主题 – <a class="theme-link" target="_blank" href="https://theme-next.org">NexT.Pisces</a> v6.4.1</div>
 
 
 
@@ -1062,7 +1079,39 @@
     
 
     
+	
+    
+      <div>
+        
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "1",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      },
+      "slide": {
+        "bdImg": "5",
+        "bdPos": "right",
+        "bdTop": "100"
+      }
+    }
+  </script>
 
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      </div>
+    
+
+    
   </div>
 
   
@@ -1117,36 +1166,32 @@
   
 
 
-  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
 
-  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
-
-
-
-  
-  
-
-
-  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
-
-  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
 
 
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
 
 
 
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
-
-
-
-  
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
 
 
 
@@ -1154,8 +1199,20 @@
 
 
 
-
-
+  
+    <script type="text/javascript">
+      window.livereOptions = {
+        refer: '2018/04/06/chalk/'
+      };
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
   
 
 
@@ -1494,6 +1551,65 @@
 
 
   
+
+  
+  <script>
+    
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+
+      Counter('get', '/classes/Counter', { where: JSON.stringify({ url }) })
+        .done(function ({ results }) {
+          if (results.length > 0) {
+            var counter = results[0];
+            
+              var $element = $(document.getElementById(url));
+              $element.find('.leancloud-visitors-count').text(counter.time + 1);
+            
+            Counter('put', `/classes/Counter/${counter.objectId}`, JSON.stringify({ time: { "__op":"Increment", "amount":1 } }))
+            
+            .fail(function ({ responseJSON }) {
+                console.log('Failed to save Visitor num, with error message: ' + responseJSON.error);
+            })
+          } else {
+            
+              var $element = $(document.getElementById(url));
+              $element.find('.leancloud-visitors-count').text('Counter not initialized! See more at console err msg.');
+              console.error('ATTENTION! LeanCloud counter has security bug, see here how to solve it: https://github.com/theme-next/hexo-leancloud-counter-security. \n But you also can use LeanCloud without security, by set \'security\' option to \'false\'.');
+            
+          }
+        })
+      .fail(function ({ responseJSON }) {
+        console.log('LeanCloud Counter Error:' + responseJSON.code + " " + responseJSON.error);
+      });
+    }
+    
+
+    $(function() {
+      $.get('https://app-router.leancloud.cn/2/route?appId=' + "LR6ffsxhUrN8TBS0C8qA6CUH-gzGzoHsz")
+        .done(function ({ api_server }) {
+          var Counter = function (method, url, data) {
+            return $.ajax({
+              method: method,
+              url: `https://${api_server}/1.1${url}`,
+              headers: {
+                'X-LC-Id': "LR6ffsxhUrN8TBS0C8qA6CUH-gzGzoHsz",
+                'X-LC-Key': "9WmXiCXsm6OJL10V2fYCt4Xo",
+                'Content-Type': 'application/json',
+              },
+              data: data,
+            });
+          };
+          
+          addCount(Counter);
+          
+        })
+    });
+  </script>
+
+
 
   
 
